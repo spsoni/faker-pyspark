@@ -1,11 +1,7 @@
 
 # PySpark provider for Faker
 
-
-## Acknowlegements
-
-
-`faker_pyspark` is a provider for the `Faker` Python package, and a fork of https://github.com/kennethwsmith/faker_vehicle.  I would like to thank the maintainer of that repository, since I used the structure to create this one.
+`faker_pyspark` is a provider for the `Faker` Python package.
 
 
 ## Description
@@ -35,16 +31,16 @@ fake.add_provider(PySparkProvider)
 If you already use faker, you probably know the conventional use is:
 
 ```python
+from faker import Faker
 fake = Faker()
-
 ```
 
 
 ### PySpark DataFrame and Schema (StructType)
 
 ``` python
->>> df = fake.create_dataframe()
+>>> df = fake.pyspark_dataframe()
 
->>> schema = fake.create_schema()
+>>> schema = fake.pyspark_schema()
 
 ```
