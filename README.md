@@ -1,6 +1,8 @@
 
 # PySpark provider for Faker
 
+[![Python package](https://github.com/spsoni/faker_pyspark/actions/workflows/python-package.yml/badge.svg)](https://github.com/spsoni/faker_pyspark/actions/workflows/python-package.yml)
+
 `faker_pyspark` is a provider for the `Faker` Python package.
 
 
