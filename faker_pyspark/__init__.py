@@ -1,5 +1,2 @@
 """PySpark Faker Community Provider"""
-
-__version__ = "0.1"
-
-from .pyspark import PySparkProvider  # noqa: F401
+from .pyspark import Provider, PySparkProvider  # noqa: F401

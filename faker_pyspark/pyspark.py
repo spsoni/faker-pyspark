@@ -168,3 +168,6 @@ class PySparkProvider(BaseProvider):
 
         schema = spark.createDataFrame([data, ]).select(sorted_columns).schema
         return self._add_metadata_to_schema(schema, uid_column_name)
+
+
+Provider = PySparkProvider
