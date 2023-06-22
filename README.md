@@ -38,11 +38,14 @@ fake = Faker()
 ```
 
 
-### PySpark DataFrame and Schema (StructType)
+### PySpark DataFrame, Schema and more
 
 ``` python
->>> df = fake.pyspark_dataframe()
-
->>> schema = fake.pyspark_schema()
+>>> df           = fake.pyspark_dataframe()
+>>> schema       = fake.pyspark_schema()
+>>> df_updated   = fake.pyspark_update_dataframe(df)
+>>> column_names = fake.pyspark_column_names()
+>>> data         = fake.pyspark_data_dict_using_schema(schema)
+>>> data         = fake.pyspark_data_dict()
 
 ```

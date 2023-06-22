@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "faker-pyspark"
-version = "0.2.0"
+version = "0.3.0"
 description = "faker-pyspark is a PySpark DataFrame and Schema provider for the Faker python package"
 authors = ["Sury Soni <github@suryasoni.info>"]
 license = "MIT"
