@@ -47,9 +47,9 @@ fake.add_provider(PySparkProvider)
 ### CLI `faker`
 
 ```bash
-$ faker pyspark_schema -i faker_pyspark
-$ faker pyspark_dataframe -i faker_pyspark
-$ faker pyspark_schema -i faker_pyspark
+$ faker pyspark_schema       -i faker_pyspark
+$ faker pyspark_dataframe    -i faker_pyspark
+$ faker pyspark_schema       -i faker_pyspark
 $ faker pyspark_column_names -i faker_pyspark
-$ faker pyspark_data_dict -i faker_pyspark
+$ faker pyspark_data_dict    -i faker_pyspark
 ```
