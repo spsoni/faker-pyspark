@@ -1,10 +1,13 @@
 [tool.poetry]
 name = "faker-pyspark"
-version = "0.1.0"
-description = "faker_pyspark is a PySpark provider for the Faker python package"
+version = "0.2.0"
+description = "faker-pyspark is a PySpark DataFrame and Schema provider for the Faker python package"
 authors = ["Sury Soni <github@suryasoni.info>"]
 license = "MIT"
 readme = "README.md"
+homepage = "https://github.com/spsoni/faker-pyspark"
+keywords = ["Faker, PySpark"]
+repository = "https://github.com/spsoni/faker-pyspark"
 packages = [{include = "faker_pyspark"}]
 
 [tool.poetry.dependencies]

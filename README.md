@@ -3,12 +3,12 @@
 
 [![Python package](https://github.com/spsoni/faker_pyspark/actions/workflows/python-package.yml/badge.svg)](https://github.com/spsoni/faker_pyspark/actions/workflows/python-package.yml)
 
-`faker_pyspark` is a provider for the `Faker` Python package.
+`faker-pyspark` is a PySpark DataFrame and Schema (StructType) provider for the `Faker` Python package.
 
 
 ## Description
 
-`faker_pyspark` provides PySpark based fake data for testing purposes.  The definition of "fake" in this context really means "random," as the data may look real.  However, I make no claims about accuracy, so do not use this as real data!
+`faker-pyspark` provides PySpark based fake data for testing purposes.  The definition of "fake" in this context really means "random," as the data may look real.  However, I make no claims about accuracy, so do not use this as real data!
 
 
 ## Installation
@@ -16,7 +16,7 @@
 Install with pip:
 
 ``` bash
-pip install faker_pyspark
+pip install faker-pyspark
 
 ```
 
