@@ -2,6 +2,7 @@
 # PySpark provider for Faker
 
 [![Python package](https://github.com/spsoni/faker_pyspark/actions/workflows/python-package.yml/badge.svg)](https://github.com/spsoni/faker_pyspark/actions/workflows/python-package.yml)
+[![CodeQL](https://github.com/spsoni/faker-pyspark/actions/workflows/codeql.yml/badge.svg)](https://github.com/spsoni/faker-pyspark/actions/workflows/codeql.yml)
 
 `faker-pyspark` is a PySpark DataFrame and Schema (StructType) provider for the `Faker` Python package.
 
