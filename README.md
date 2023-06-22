@@ -26,17 +26,10 @@ Add as a provider to your Faker instance:
 
 from faker import Faker
 from faker_pyspark import PySparkProvider
+fake = Faker()
 fake.add_provider(PySparkProvider)
 
 ```
-
-If you already use faker, you probably know the conventional use is:
-
-```python
-from faker import Faker
-fake = Faker()
-```
-
 
 ### PySpark DataFrame, Schema and more
 
