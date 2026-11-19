@@ -60,7 +60,7 @@ jobs:
       - run: uv sync --locked
       - run: uv run pytest
       - run: uv build
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
