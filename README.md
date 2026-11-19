@@ -1,8 +1,10 @@
-
 # PySpark provider for Faker
 
-[![Python package](https://github.com/spsoni/faker_pyspark/actions/workflows/python-package.yml/badge.svg)](https://github.com/spsoni/faker_pyspark/actions/workflows/python-package.yml)
+[![PyPI](https://img.shields.io/pypi/v/faker-pyspark?color=blue)](https://pypi.org/project/faker-pyspark/)
+[![Python](https://img.shields.io/pypi/pyversions/faker-pyspark)](https://pypi.org/project/faker-pyspark/)
+[![CI](https://github.com/spsoni/faker-pyspark/actions/workflows/python-package.yml/badge.svg)](https://github.com/spsoni/faker-pyspark/actions/workflows/python-package.yml)
 [![CodeQL](https://github.com/spsoni/faker-pyspark/actions/workflows/codeql.yml/badge.svg)](https://github.com/spsoni/faker-pyspark/actions/workflows/codeql.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](https://github.com/spsoni/faker-pyspark/blob/main/LICENSE)
 
 `faker-pyspark` is a PySpark DataFrame and Schema (StructType) provider for the `Faker` Python package.
 
@@ -14,11 +16,19 @@
 
 ## Installation
 
-Install with pip:
+Requires Python 3.11+ and a Java runtime for Spark.
+
+Install with pip. If your environment already has PySpark (Databricks, EMR, Glue, or your
+own install), the plain package is enough:
 
 ``` bash
 pip install faker-pyspark
+```
 
+Otherwise pull PySpark in as well:
+
+``` bash
+pip install 'faker-pyspark[pyspark]'
 ```
 
 Add as a provider to your Faker instance:
@@ -44,12 +54,21 @@ fake.add_provider(PySparkProvider)
 
 ```
 
+Pass your own `SparkSession` with `spark=...`; without one, the provider uses
+`SparkSession.builder.getOrCreate()`.
+
 ### CLI `faker`
 
 ```bash
 $ faker pyspark_schema       -i faker_pyspark
 $ faker pyspark_dataframe    -i faker_pyspark
-$ faker pyspark_schema       -i faker_pyspark
 $ faker pyspark_column_names -i faker_pyspark
 $ faker pyspark_data_dict    -i faker_pyspark
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](https://github.com/spsoni/faker-pyspark/blob/main/CONTRIBUTING.md)
+for the development setup, and
+[CHANGELOG.md](https://github.com/spsoni/faker-pyspark/blob/main/CHANGELOG.md) for what
+changed between releases.

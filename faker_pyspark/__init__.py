@@ -1,2 +1,5 @@
 """PySpark Faker Community Provider"""
-from .pyspark import Provider, PySparkProvider  # noqa: F401
+
+from .pyspark import Provider, PySparkProvider
+
+__all__ = ["Provider", "PySparkProvider"]
