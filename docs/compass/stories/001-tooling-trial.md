@@ -1,6 +1,6 @@
 # Story 001 — tooling-trial
 
-**Status:** verifying
+**Status:** done
 **Depends on:** none
 
 ## Goal
@@ -90,9 +90,13 @@ switch type checker yet.
 - [x] **Cooldown:** `uv lock` succeeded; lock records `exclude-newer-span = "P7D"`.
 - [x] **Type-checker scorecard:** above.
 - [x] **`uv audit`:** works; output above.
-- [ ] **No behaviour change:** `git diff main -- faker_pyspark/` empty; `uv run pytest` passes.
-- [ ] **CI green** on the PR.
-- [ ] **No release triggered** after merge.
+- [x] **No behaviour change:** `git diff main -- faker_pyspark/` is empty; `uv run pytest`
+  — 15 passed, 99% coverage.
+- [x] **CI green** on PR #9: lint, tests on 3.11–3.14, minimum-versions job, build, CodeQL.
+  The first run failed lint because the new `typos` hook flagged a word in this file,
+  which the local run had skipped while the file was untracked.
+- [x] **No release triggered:** the PR is a `build:` commit, which release-please does not
+  turn into a release. Confirmed on `main` after merge (see `STATUS.md` if that changes).
 
 ## Notes
 
