@@ -1,23 +1,84 @@
-[tool.poetry]
+[project]
 name = "faker-pyspark"
-version = "0.8.0"
+version = "0.9.0"
 description = "faker-pyspark is a PySpark DataFrame and Schema provider for the Faker python package"
-authors = ["Sury Soni <github@suryasoni.info>"]
-license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/spsoni/faker-pyspark"
-keywords = ["Faker, PySpark"]
-repository = "https://github.com/spsoni/faker-pyspark"
-packages = [{include = "faker_pyspark"}]
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Sury Soni", email = "github@suryasoni.info" }]
+keywords = ["Faker", "PySpark", "Spark", "DataFrame", "test data", "fake data"]
+requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: Pytest",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
+]
+dependencies = ["faker>=18.11"]
 
-[tool.poetry.dependencies]
-python = "^3.8.1"
+[project.optional-dependencies]
+# PySpark is an extra so that installing on a cluster that already ships Spark
+# (Databricks, EMR, Glue) does not pull a second copy over the runtime's own.
+pyspark = ["pyspark>=3.4"]
 
-[tool.poetry.group.dev.dependencies]
-pytest-cov = "^4.1.0"
-pyspark = "^3.4.0"
-faker = "^18.11.1"
+[project.urls]
+Homepage = "https://github.com/spsoni/faker-pyspark"
+Repository = "https://github.com/spsoni/faker-pyspark"
+Issues = "https://github.com/spsoni/faker-pyspark/issues"
+Changelog = "https://github.com/spsoni/faker-pyspark/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.13",
+    "pre-commit>=4.0",
+    "pyspark>=3.4",
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "ruff>=0.8",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+include = ["faker_pyspark", "tests", "README.md", "CHANGELOG.md", "CONTRIBUTING.md", "LICENSE"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "B",        # bugbear
+    "UP",       # pyupgrade
+    "SIM",      # simplify
+    "BLE",      # blind except
+    "RUF",
+]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers --cov=faker_pyspark --cov-report=term-missing"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError"]
