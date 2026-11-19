@@ -197,7 +197,7 @@ def test_locale_follows_the_faker_and_can_be_overridden(spark: SparkSession) -> 
 
 @pytest.mark.parametrize(
     ("locale", "expected"),
-    [(None, None), ("en_US", None), ("ja_JP", "ja_JP"), ("en_AU", "en_AU"), ("zu_ZA", "zu_ZA")],
+    [(None, None), ("en_US", None), ("ja_JP", "ja_JP"), ("en_AU", "en_AU"), ("de_DE", "de_DE")],
 )
 def test_locale_is_read_from_the_faker(locale: str | None, expected: str | None) -> None:
     faker = make_faker(locale=locale)

@@ -325,8 +325,12 @@ def test_bad_specifications_are_rejected_up_front(
         RowGenerator(schema, seed=1, **options).row(0)
 
 
+class MysteryType(T.DataType):
+    """Stands in for any Spark type the engine has no generator for."""
+
+
 def test_unsupported_type_names_the_column_and_can_be_overridden() -> None:
-    schema = struct(("gap", T.YearMonthIntervalType()))
+    schema = struct(("gap", MysteryType()))
     with pytest.raises(UnsupportedTypeError, match=r"column 'gap'.*overrides"):
         RowGenerator(schema, seed=1)
     assert one(schema, overrides={"gap": lambda faker: 14}) == {"gap": 14}
