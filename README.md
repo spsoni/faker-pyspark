@@ -6,65 +6,136 @@
 [![CodeQL](https://github.com/spsoni/faker-pyspark/actions/workflows/codeql.yml/badge.svg)](https://github.com/spsoni/faker-pyspark/actions/workflows/codeql.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](https://github.com/spsoni/faker-pyspark/blob/main/LICENSE)
 
-`faker-pyspark` is a PySpark DataFrame and Schema (StructType) provider for the `Faker` Python package.
+Give it a Spark schema, get a DataFrame of realistic, reproducible fake data.
 
+```python
+from faker import Faker
+from faker_pyspark import PySparkProvider
 
-## Description
+fake = Faker()
+fake.add_provider(PySparkProvider)
 
-`faker-pyspark` provides PySpark based fake data for testing purposes.  The definition of "fake" in this context really means "random," as the data may look real.  However, I make no claims about accuracy, so do not use this as real data!
+df = fake.pyspark_dataframe(
+    "id long, first_name string, email string, age int, unit_price decimal(10,2), "
+    "signup date, address struct<city:string,postcode:string>, tags array<string>",
+    rows=1000,
+)
+```
 
+The data is fake: it looks real, but it is random. Do not use it as real data.
 
 ## Installation
 
 Requires Python 3.11+ and a Java runtime for Spark.
 
-Install with pip. If your environment already has PySpark (Databricks, EMR, Glue, or your
-own install), the plain package is enough:
+If your environment already has PySpark (Databricks, EMR, Glue, or your own install), the
+plain package is enough:
 
-``` bash
+```bash
 pip install faker-pyspark
 ```
 
 Otherwise pull PySpark in as well:
 
-``` bash
+```bash
 pip install 'faker-pyspark[pyspark]'
 ```
 
-Add as a provider to your Faker instance:
+## How columns are filled
 
-``` python
+For each column, the first of these that applies wins:
 
-from faker import Faker
-from faker_pyspark import PySparkProvider
-fake = Faker()
-fake.add_provider(PySparkProvider)
+1. **An override** you pass for that column.
+2. **A `faker` entry in the field's metadata**, so a schema can carry its own instructions.
+3. **The column's name.** `email`, `customer_email`, `billing_city`, `fname`, `zip` and
+   `uuid` get matching text; `age`, `unit_price`, `latitude`, `rating` and `date_of_birth`
+   get plausible ranges.
+4. **The column's type.** Every Spark type is covered: strings (including `varchar(n)` and
+   `char(n)`), booleans, all integer sizes, float, double, decimal, date, timestamp,
+   timestamp_ntz, binary, day-time intervals, and arrays, maps and structs nested to any
+   depth.
 
+A type with no Python value Spark accepts (such as year-month intervals) raises
+`UnsupportedTypeError` naming the column, and an override for that column resolves it.
+
+## Overrides
+
+```python
+df = fake.pyspark_dataframe(
+    "status string, quantity int, sku string, note string, address struct<city:string>",
+    rows=500,
+    overrides={
+        "status": ["new", "paid", "shipped"],              # choose from a list
+        "quantity": ("pyint", {"min_value": 1, "max_value": 12}),  # Faker method + arguments
+        "sku": "ean13",                                    # Faker method by name
+        "note": lambda f: f"ref {f.bothify('??-####')}",   # any function of the Faker
+        "address.city": ["Melbourne", "Sydney"],           # nested field, dotted path
+    },
+)
 ```
 
-### PySpark DataFrame, Schema and more
+Array elements are addressed with `[]`, as in `"tags[]"` or `"people[].role"`. A misspelt
+column name or Faker method is an error, not a silent no-op.
 
-``` python
->>> df           = fake.pyspark_dataframe()
->>> schema       = fake.pyspark_schema()
->>> df_updated   = fake.pyspark_update_dataframe(df)
->>> column_names = fake.pyspark_column_names()
->>> data         = fake.pyspark_data_dict_using_schema(schema)
->>> data         = fake.pyspark_data_dict()
+The same instructions can live in the schema:
 
+```python
+from pyspark.sql.types import StringType, StructField, StructType
+
+schema = StructType([
+    StructField("country", StringType(), metadata={"faker": "country_code"}),
+    StructField("tier", StringType(), metadata={"faker": {"choices": ["free", "pro"]}}),
+    StructField("pin", StringType(), metadata={"faker": {"method": "numerify", "kwargs": {"text": "####"}}}),
+])
 ```
 
-Pass your own `SparkSession` with `spark=...`; without one, the provider uses
-`SparkSession.builder.getOrCreate()`.
+## Reproducible data
 
-### CLI `faker`
+All randomness comes from your Faker instance, so seeding it fixes the output:
+
+```python
+fake.seed_instance(42)
+first = fake.pyspark_dataframe("email string, age int", rows=100)
+
+fake.seed_instance(42)
+second = fake.pyspark_dataframe("email string, age int", rows=100)
+# first and second hold identical rows
+```
+
+Dates and timestamps are drawn from a fixed range (1970 to 2029) rather than from "now", so
+a seeded run gives the same values tomorrow as it does today.
+
+## Other options
+
+```python
+fake.pyspark_dataframe(
+    schema,              # StructType, DDL string, or omit for a random schema
+    rows=10,
+    spark=None,          # defaults to the active session, or starts one
+    null_ratio=0.1,      # share of nulls in nullable columns
+    array_size=(1, 3),   # inclusive length range for arrays and maps
+    locale="ja_JP",      # defaults to your Faker's locale
+)
+
+fake.pyspark_rows(schema, rows=10)          # the same data as a list of dictionaries
+fake.pyspark_schema(columns=(3, 8))         # a random schema of realistically named columns
+fake.pyspark_schema(columns=5, nested=True)  # ...allowing structs, arrays and maps
+```
+
+Providers you have added to your Faker are available to overrides by method name.
+
+## Command line
 
 ```bash
-$ faker pyspark_schema       -i faker_pyspark
-$ faker pyspark_dataframe    -i faker_pyspark
-$ faker pyspark_column_names -i faker_pyspark
-$ faker pyspark_data_dict    -i faker_pyspark
+faker pyspark_schema -i faker_pyspark
 ```
+
+## Upgrading from 0.9
+
+Version 0.10 replaced the API. `pyspark_dataframe` and `pyspark_schema` keep their names
+with new arguments; `pyspark_update_dataframe`, `pyspark_column_names`, `pyspark_data_dict`
+and `pyspark_data_dict_using_schema` are gone, as is the `fake_type` metadata key (use
+`faker`). `pyspark_rows` replaces the two `data_dict` methods.
 
 ## Contributing
 

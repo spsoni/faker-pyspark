@@ -4,15 +4,14 @@
 > in the story files, the roadmap in `PLAN.md`.
 
 ## Done
-001 tooling trial, 002 reproducible core (see `stories/`).
+001 tooling trial, 002 reproducible core, 003 new schema-driven API (see `stories/`).
 
 ## Now
-**003** — new API + bring-your-own-schema.
+**004** — scale: executor-side generation, Spark Connect.
 
 ## Next
-1. **004** — scale: executor-side generation, Spark Connect.
-2. **005** — test ergonomics: keys, related tables, locales, pytest fixtures.
-3. **006** — docs site and 1.0.
+1. **005** — test ergonomics: keys, related tables, pytest fixtures.
+2. **006** — docs site and 1.0.
 
 ## Blocked / decisions needed
 - **PyPI publishing** — owner locked out of PyPI (recovery request raised 2026-11-19).
