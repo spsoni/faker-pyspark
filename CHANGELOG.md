@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.10.0](https://github.com/spsoni/faker-pyspark/compare/v0.9.0...v0.10.0) (2026-11-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* the API is replaced. `pyspark_dataframe` and `pyspark_schema` keep their names with new arguments; `pyspark_update_dataframe`, `pyspark_column_names`, `pyspark_data_dict` and `pyspark_data_dict_using_schema` are removed, as is the `fake_type` metadata key (use `faker`). `pyspark_rows` replaces the `data_dict` methods.
+
+### Features
+
+* schema-driven API for every Spark type ([#12](https://github.com/spsoni/faker-pyspark/issues/12)) ([92aa11d](https://github.com/spsoni/faker-pyspark/commit/92aa11d95a4d71466efd5253d81a99f7b2b7f7a6))
+
+
+### Bug Fixes
+
+* honour Faker seeding and make random column selection fair ([#10](https://github.com/spsoni/faker-pyspark/issues/10)) ([547dca7](https://github.com/spsoni/faker-pyspark/commit/547dca7812585827ed5372f45bb4cf323f4a9cad))
+
 ## [0.9.0](https://github.com/spsoni/faker-pyspark/compare/v0.8.0...v0.9.0) (2026-11-19)
 
 
