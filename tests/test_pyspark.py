@@ -3,7 +3,7 @@ import sys
 
 from faker import Faker
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.types import StructType
+from pyspark.sql.types import StringType, StructField, StructType
 
 from faker_pyspark import Provider, PySparkProvider
 from faker_pyspark.pyspark import fake_fields_list, get_spark
@@ -82,7 +82,9 @@ def test_pyspark_data_dict_using_schema(fake: Faker) -> None:
 
 def test_pyspark_data_dict_using_schema_without_metadata(fake: Faker) -> None:
     # Without `fake_type` metadata the column name itself is the Faker method.
-    schema = StructType.fromDDL("first_name string, last_name string")
+    schema = StructType(
+        [StructField("first_name", StringType()), StructField("last_name", StringType())]
+    )
     data = fake.pyspark_data_dict_using_schema(schema=schema)
     assert list(data) == ["first_name", "last_name"]
     assert all(isinstance(value, str) for value in data.values())
@@ -90,7 +92,7 @@ def test_pyspark_data_dict_using_schema_without_metadata(fake: Faker) -> None:
 
 def test_pyspark_data_dict(fake: Faker) -> None:
     data = fake.pyspark_data_dict(min_columns=5, max_columns=10)
-    assert 1 <= len(data) <= 10
+    assert 5 <= len(data) <= 10
 
     data = fake.pyspark_data_dict(uid_column_name="id")
     assert "id" in data
@@ -99,7 +101,7 @@ def test_pyspark_data_dict(fake: Faker) -> None:
 def test_pyspark_schema(spark: SparkSession, fake: Faker) -> None:
     for schema in (fake.pyspark_schema(), fake.pyspark_schema(spark=spark)):
         assert isinstance(schema, StructType)
-        assert 2 <= len(schema.fields) <= 11
+        assert 4 <= len(schema.fields) <= 10
         assert schema.fields[0].name == "uid"
         assert schema.fields[0].metadata["fake_type"] == "uuid4"
         for field in schema.fields[1:]:

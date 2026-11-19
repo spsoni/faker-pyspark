@@ -1,3 +1,5 @@
+import os
+import sys
 from collections.abc import Iterator
 
 import pytest
@@ -5,6 +7,10 @@ from faker import Faker
 from pyspark.sql import SparkSession
 
 from faker_pyspark import PySparkProvider
+
+# Spark workers default to whatever `python3` is on PATH, which need not be the
+# interpreter running the tests (for example `.venv/bin/python -m pytest`).
+os.environ.setdefault("PYSPARK_PYTHON", sys.executable)
 
 
 @pytest.fixture(scope="session")

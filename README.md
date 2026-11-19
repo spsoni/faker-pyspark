@@ -4,7 +4,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/faker-pyspark)](https://pypi.org/project/faker-pyspark/)
 [![CI](https://github.com/spsoni/faker-pyspark/actions/workflows/python-package.yml/badge.svg)](https://github.com/spsoni/faker-pyspark/actions/workflows/python-package.yml)
 [![CodeQL](https://github.com/spsoni/faker-pyspark/actions/workflows/codeql.yml/badge.svg)](https://github.com/spsoni/faker-pyspark/actions/workflows/codeql.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](https://github.com/spsoni/faker-pyspark/blob/main/LICENSE)
 
 `faker-pyspark` is a PySpark DataFrame and Schema (StructType) provider for the `Faker` Python package.
 
@@ -68,5 +68,7 @@ $ faker pyspark_data_dict    -i faker_pyspark
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup, and
-[CHANGELOG.md](CHANGELOG.md) for what changed between releases.
+See [CONTRIBUTING.md](https://github.com/spsoni/faker-pyspark/blob/main/CONTRIBUTING.md)
+for the development setup, and
+[CHANGELOG.md](https://github.com/spsoni/faker-pyspark/blob/main/CHANGELOG.md) for what
+changed between releases.

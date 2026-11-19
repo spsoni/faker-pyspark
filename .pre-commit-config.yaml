@@ -7,8 +7,9 @@ repos:
       - id: check-yaml
       - id: check-toml
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.6
+    # Keep in step with the ruff version in uv.lock, which is what CI runs.
+    rev: v0.17.5
     hooks:
-      - id: ruff
+      - id: ruff-check
         args: [--fix]
       - id: ruff-format

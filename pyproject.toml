@@ -10,7 +10,6 @@ keywords = ["Faker", "PySpark", "Spark", "DataFrame", "test data", "fake data"]
 requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 4 - Beta",
-    "Framework :: Pytest",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
