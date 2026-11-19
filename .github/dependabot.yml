@@ -4,6 +4,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # Same one-week cooldown as `exclude-newer` in pyproject.toml.
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "chore"
     groups:
@@ -13,5 +16,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "chore"
+    groups:
+      actions:
+        patterns: ["*"]
