@@ -101,7 +101,7 @@ def test_pyspark_data_dict(fake: Faker) -> None:
 def test_pyspark_schema(spark: SparkSession, fake: Faker) -> None:
     for schema in (fake.pyspark_schema(), fake.pyspark_schema(spark=spark)):
         assert isinstance(schema, StructType)
-        assert 4 <= len(schema.fields) <= 10
+        assert 4 <= len(schema.fields) <= 11
         assert schema.fields[0].name == "uid"
         assert schema.fields[0].metadata["fake_type"] == "uuid4"
         for field in schema.fields[1:]:

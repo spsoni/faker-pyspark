@@ -36,6 +36,7 @@ Changelog = "https://github.com/spsoni/faker-pyspark/blob/main/CHANGELOG.md"
 
 [dependency-groups]
 dev = [
+    "hypothesis>=6.150",
     "mypy>=1.13",
     "prek>=0.5.10",
     "pyspark>=3.4",

@@ -1,4 +1,3 @@
-import random
 from collections import OrderedDict
 from typing import Any
 
@@ -32,7 +31,34 @@ def get_spark(app_name: str = "faker_pyspark") -> SparkSession:
     return SparkSession.builder.appName(app_name).getOrCreate()
 
 
+_FIELDS_CACHE: dict[tuple[type, ...], tuple[list[str], list[str]]] = {}
+
+
 def fake_fields_list(generator: Generator | Faker, allow_complex_types: bool = True) -> list[str]:
+    """Names of the Faker methods usable as columns, sorted.
+
+    Finding them means calling every method once. That is done once per set of
+    providers, and the generator's random state is restored afterwards, so calling
+    this never changes what a seeded generator produces next.
+    """
+    key = tuple(type(provider) for provider in generator.providers)
+    if key not in _FIELDS_CACHE:
+        state = generator.random.getstate()
+        try:
+            _FIELDS_CACHE[key] = _probe_fields(generator)
+        finally:
+            generator.random.setstate(state)
+
+    fields, nested_fields = _FIELDS_CACHE[key]
+    # Sorted so the list, and therefore any seeded choice from it, does not depend on
+    # the order in which Faker happened to import its providers.
+    if allow_complex_types:
+        return sorted(fields + nested_fields)
+
+    return sorted(fields)
+
+
+def _probe_fields(generator: Generator | Faker) -> tuple[list[str], list[str]]:
     fields: list[str] = []
     nested_fields: list[str] = []
     for cls in BaseProvider.__subclasses__():
@@ -48,6 +74,7 @@ def fake_fields_list(generator: Generator | Faker, allow_complex_types: bool = T
                 or not attr.islower()
                 or not hasattr(generator, attr)
                 or attr in fields
+                or attr in nested_fields
             ):
                 # case when attr is not a provider method
                 continue
@@ -59,10 +86,7 @@ def fake_fields_list(generator: Generator | Faker, allow_complex_types: bool = T
                 fields.append(attr)
             # we do not allow other complex types
 
-    if allow_complex_types:
-        return fields + nested_fields
-
-    return fields
+    return fields, nested_fields
 
 
 class PySparkProvider(BaseProvider):
@@ -101,7 +125,7 @@ class PySparkProvider(BaseProvider):
         self, df: DataFrame, retain_columns: list[str] | None = None
     ) -> DataFrame:
         rows = df.collect()
-        random_rows = random.choices(rows)
+        random_rows = self.generator.random.choices(rows)
         updated_rows = []
         if retain_columns is None:
             retain_columns = []
@@ -122,9 +146,20 @@ class PySparkProvider(BaseProvider):
     def pyspark_column_names(
         self, min_columns: int = 3, max_columns: int = 10, allow_complex_types: bool = False
     ) -> list[str]:
-        cols_count = int(random.uniform(min_columns, max_columns))
+        """Pick between ``min_columns`` and ``max_columns`` (both inclusive) distinct names.
+
+        All randomness comes from the Faker instance, so ``Faker.seed()`` and
+        ``fake.seed_instance()`` make the result reproducible.
+        """
+        if not 0 <= min_columns <= max_columns:
+            raise ValueError(
+                f"need 0 <= min_columns <= max_columns, got {min_columns} and {max_columns}"
+            )
         fields = fake_fields_list(self.generator, allow_complex_types)
-        return random.choices(fields, k=cols_count)
+        rng = self.generator.random
+        cols_count = min(rng.randint(min_columns, max_columns), len(fields))
+        names: list[str] = rng.sample(fields, k=cols_count)
+        return names
 
     def pyspark_data_dict_using_schema(self, schema: StructType) -> dict[str, Any]:
         data: dict[str, Any] = OrderedDict()
