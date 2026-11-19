@@ -32,18 +32,22 @@ uv run mypy faker_pyspark tests        # strict type checking
 - **Tests must be deterministic in outcome.** The provider generates random schemas, so
   assert on properties that hold for every draw, and re-run a new test several times
   before trusting it.
-- **Document user-facing changes** in `README.md` and add an entry under *Unreleased* in
-  `CHANGELOG.md`.
+- **Document user-facing changes** in `README.md`.
+- **Use [Conventional Commits](https://www.conventionalcommits.org/)** for anything that
+  lands on `main` (pull requests are squash-merged, so the PR title is what counts):
+  `fix: ...` for a patch release, `feat: ...` for a minor one, and `feat!: ...` or a
+  `BREAKING CHANGE:` footer for a breaking change. The changelog and the next version
+  number are generated from these, so do not edit `CHANGELOG.md` or the version by hand.
 - **Public API:** anything exported from `faker_pyspark/__init__.py`, plus the
   `pyspark_*` provider methods. Avoid breaking it without a good reason, and call breaks
   out in the changelog.
 
 ## Releasing
 
-1. Bump the version (`uv version --bump minor`, or edit `pyproject.toml`), and move the
-   *Unreleased* changelog entries under it with today's date.
-2. Merge to `main`.
-3. Publish a GitHub release tagged `vX.Y.Z`, for example
-   `gh release create vX.Y.Z --generate-notes`. The *Release* workflow checks that the tag
-   matches the package version, runs the tests, and publishes to PyPI through trusted
-   publishing. No token is needed.
+Releases are automated with [release-please](https://github.com/googleapis/release-please).
+
+1. Every push to `main` updates a release pull request titled `chore(main): release X.Y.Z`,
+   containing the version bump and the generated changelog.
+2. Merging that pull request tags `vX.Y.Z` and creates the GitHub release. The same
+   *Release* workflow run then runs the tests, builds the package and publishes it to PyPI
+   through trusted publishing. No token is needed.
