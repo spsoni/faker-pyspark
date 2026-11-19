@@ -1,3 +1,6 @@
+# Run with prek (https://prek.j178.dev), a drop-in replacement for pre-commit:
+#   uv run prek install        # once, to run on every commit
+#   uv run prek run --all-files
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -8,8 +11,22 @@ repos:
       - id: check-toml
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Keep in step with the ruff version in uv.lock, which is what CI runs.
-    rev: v0.17.5
+    rev: v0.17.4
     hooks:
       - id: ruff-check
         args: [--fix]
       - id: ruff-format
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.52.0
+    hooks:
+      - id: typos
+        # Report only; never rewrite files on commit.
+        args: []
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.32.0
+    hooks:
+      - id: zizmor
+  - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
+    rev: v1.7.12.25
+    hooks:
+      - id: actionlint

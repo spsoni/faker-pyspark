@@ -12,8 +12,11 @@ tests start a local Spark session, so you also need a JDK (17 or 21) on your `PA
 git clone https://github.com/spsoni/faker-pyspark.git
 cd faker-pyspark
 uv sync                       # creates .venv with the dev dependencies, including PySpark
-uv run pre-commit install     # run ruff on every commit
+uv run prek install           # run the hooks on every commit
 ```
+
+[prek](https://prek.j178.dev) is a faster drop-in replacement for pre-commit and reads the
+same `.pre-commit-config.yaml`.
 
 ## Checks
 
@@ -21,10 +24,13 @@ CI runs all of these, and a pull request needs them to pass:
 
 ```bash
 uv run pytest                          # tests + coverage (local Spark session)
-uv run ruff check .                    # lint
-uv run ruff format --check .           # formatting
+uv run prek run --all-files            # ruff lint + format, typos, zizmor, actionlint
 uv run mypy faker_pyspark tests        # strict type checking
 ```
+
+Dependencies resolve with a seven-day cooldown (`exclude-newer` in `pyproject.toml`), so a
+release published in the last week is not picked up. GitHub Actions are pinned to commit
+SHAs; Dependabot keeps both current.
 
 ## Guidelines
 
