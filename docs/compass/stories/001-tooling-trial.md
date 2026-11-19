@@ -57,7 +57,7 @@ cast), each checker on its strictest setting:
 
 Both candidates are more than ten times faster, which does not matter at this size. pyrefly
 is quiet and correct but misses a third of what strict mypy enforces. ty cannot require
-annotations and mis-resolves a PySpark class property. **Decision: mypy stays; both
+annotations and fails to resolve a PySpark class property. **Decision: mypy stays; both
 candidates were removed from the dev dependencies.** Worth re-running when ty reaches 1.0.
 
 ### Notes on `uv_build`
