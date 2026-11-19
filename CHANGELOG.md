@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-19
+
 ### Changed
 - **Breaking:** requires Python 3.11+ (3.8–3.10 are end-of-life).
 - `faker` is now a declared dependency. Previously nothing was declared, so a bare
