@@ -1,5 +1,12 @@
-"""PySpark Faker Community Provider"""
+"""PySpark provider for Faker: fake DataFrames, rows and schemas."""
 
-from .pyspark import Provider, PySparkProvider
+from .errors import FakerPySparkError, GeneratorSpecError, UnsupportedTypeError
+from .provider import Provider, PySparkProvider
 
-__all__ = ["Provider", "PySparkProvider"]
+__all__ = [
+    "FakerPySparkError",
+    "GeneratorSpecError",
+    "Provider",
+    "PySparkProvider",
+    "UnsupportedTypeError",
+]
