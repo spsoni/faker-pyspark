@@ -7,10 +7,14 @@ from faker.providers import BaseProvider
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.types import StructType, _parse_datatype_string
 
+from . import _distributed
 from ._generate import Override, RowGenerator, random_schema, spark_schema
 from .errors import GeneratorSpecError
 
 Schema = StructType | str
+
+#: Above this many rows, generation moves to the executors when it can.
+DISTRIBUTE_ABOVE = 100_000
 
 
 class PySparkProvider(BaseProvider):
@@ -71,6 +75,8 @@ class PySparkProvider(BaseProvider):
         null_ratio: float = 0.0,
         array_size: tuple[int, int] = (1, 3),
         locale: str | Sequence[str] | None = None,
+        distributed: bool | None = None,
+        partitions: int | None = None,
     ) -> DataFrame:
         """A DataFrame of fake data.
 
@@ -87,6 +93,12 @@ class PySparkProvider(BaseProvider):
         :param array_size: inclusive ``(min, max)`` length of arrays and maps.
         :param locale: Faker locale or locales for the data. Defaults to the locale of
             the Faker this provider is attached to.
+        :param distributed: generate the rows on the executors rather than on the driver.
+            The data is identical either way. By default this happens above
+            100,000 rows when pandas and pyarrow are installed. Executors need ``faker``
+            and ``faker-pyspark`` installed.
+        :param partitions: how many partitions to generate in, when distributed. Defaults
+            to Spark's own choice.
 
         Columns without an override are filled from a ``faker`` entry in the field's
         metadata if there is one, then by what the column name suggests (``email``,
@@ -94,14 +106,24 @@ class PySparkProvider(BaseProvider):
         """
         session = spark or _session()
         struct = self.pyspark_schema() if schema is None else self._struct(schema, session)
-        generator = self._row_generator(
-            struct,
-            overrides=overrides,
-            null_ratio=null_ratio,
-            array_size=array_size,
-            locale=locale,
+        count = _row_count(rows)
+        options = self._options(
+            overrides=overrides, null_ratio=null_ratio, array_size=array_size, locale=locale
         )
-        data = generator.rows(range(_row_count(rows)))
+
+        if distributed is None:
+            distributed = count > DISTRIBUTE_ABOVE and _distributed.available()
+        if distributed:
+            return _distributed.distributed_dataframe(
+                session,
+                struct,
+                spark_schema(struct),
+                rows=count,
+                partitions=partitions,
+                **options,
+            )
+
+        data = RowGenerator(struct, **options).rows(range(count))
         return session.createDataFrame(data, schema=spark_schema(struct))
 
     # -- helpers ---------------------------------------------------------------------
@@ -115,17 +137,29 @@ class PySparkProvider(BaseProvider):
         array_size: tuple[int, int],
         locale: str | Sequence[str] | None,
     ) -> RowGenerator:
-        return RowGenerator(
-            schema,
+        options = self._options(
+            overrides=overrides, null_ratio=null_ratio, array_size=array_size, locale=locale
+        )
+        return RowGenerator(schema, **options)
+
+    def _options(
+        self,
+        *,
+        overrides: Mapping[str, Override] | None,
+        null_ratio: float,
+        array_size: tuple[int, int],
+        locale: str | Sequence[str] | None,
+    ) -> dict[str, Any]:
+        return {
             # One draw from the caller's Faker seeds the whole run, so a seeded Faker
             # gives the same data and two calls in a row give different data.
-            seed=self.generator.random.getrandbits(64),
-            locale=locale or self._locale(),
-            providers=self._extra_providers(),
-            overrides=overrides,
-            null_ratio=null_ratio,
-            array_size=array_size,
-        )
+            "seed": self.generator.random.getrandbits(64),
+            "locale": locale or self._locale(),
+            "providers": self._extra_providers(),
+            "overrides": overrides,
+            "null_ratio": null_ratio,
+            "array_size": array_size,
+        }
 
     def _locale(self) -> str | None:
         # A Faker does not expose the locale it was created with to its providers. It does
