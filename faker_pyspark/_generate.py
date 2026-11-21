@@ -356,7 +356,15 @@ def _coerce(value: Any, data_type: T.DataType, path: str) -> Any:
             return value.date() if isinstance(value, datetime.datetime) else value
         if kind in ("TimestampType", "TimestampNTZType"):
             if isinstance(value, datetime.date) and not isinstance(value, datetime.datetime):
-                return datetime.datetime(value.year, value.month, value.day)
+                value = datetime.datetime(value.year, value.month, value.day)
+            if (
+                kind == "TimestampType"
+                and isinstance(value, datetime.datetime)
+                and value.tzinfo is None
+            ):
+                # A time without a zone is taken as UTC, like the generated ones. Left
+                # bare, the driver would read it in its own zone and an executor in UTC.
+                value = value.replace(tzinfo=datetime.UTC)
             return value
         if kind == "BinaryType":
             return bytearray(value.encode() if isinstance(value, str) else value)

@@ -299,6 +299,33 @@ def test_override_values_are_fitted_to_the_column_type() -> None:
     }
 
 
+def test_override_times_without_a_zone_are_utc_in_a_timestamp_column() -> None:
+    # Otherwise the driver would read them in its own zone and an executor in UTC.
+    melbourne = datetime.timezone(datetime.timedelta(hours=10))
+    schema = struct(
+        ("bare", T.TimestampType()),
+        ("from_date", T.TimestampType()),
+        ("zoned", T.TimestampType()),
+        ("no_zone_column", T.TimestampNTZType()),
+    )
+    row = one(
+        schema,
+        overrides={
+            "bare": [datetime.datetime(2024, 5, 6, 7, 8)],
+            "from_date": [datetime.date(2024, 5, 6)],
+            "zoned": [datetime.datetime(2024, 5, 6, 7, 8, tzinfo=melbourne)],
+            "no_zone_column": [datetime.datetime(2024, 5, 6, 7, 8)],
+        },
+    )
+    assert row == {
+        "bare": datetime.datetime(2024, 5, 6, 7, 8, tzinfo=datetime.UTC),
+        "from_date": datetime.datetime(2024, 5, 6, tzinfo=datetime.UTC),
+        "zoned": datetime.datetime(2024, 5, 6, 7, 8, tzinfo=melbourne),
+        "no_zone_column": datetime.datetime(2024, 5, 6, 7, 8),
+    }
+    assert row["zoned"].utcoffset() == datetime.timedelta(hours=10)
+
+
 @pytest.mark.parametrize(
     ("schema", "options", "message"),
     [

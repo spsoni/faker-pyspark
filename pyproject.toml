@@ -44,7 +44,9 @@ dev = [
     "pandas>=2.2.2,<3",
     "prek>=0.5.10",
     "pyarrow>=16",
-    "pyspark>=3.4",
+    # The connect extra adds the gRPC client, so the suite can also run over Spark
+    # Connect: SPARK_REMOTE="local[2]" uv run pytest
+    "pyspark[connect]>=3.4",
     "pytest>=8.3",
     "pytest-cov>=6.0",
     "ruff>=0.8",

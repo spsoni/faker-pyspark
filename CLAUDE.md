@@ -16,12 +16,15 @@ All of these must pass before a change is done; CI runs the same ones.
 ```bash
 uv sync
 uv run pytest                      # starts a local Spark session; needs a JDK (17 or 21)
+SPARK_REMOTE="local[2]" uv run pytest   # the same suite over Spark Connect
 uv run prek run --all-files        # ruff, typos, zizmor, actionlint, file checks
 uv run mypy faker_pyspark tests    # strict
 ```
 
 ## Conventions
 
+- DataFrame API only, in the library and the tests: no `.rdd`, no `sparkContext`, no JVM
+  access. Spark Connect has none of them.
 - Tests must hold for every random draw. Re-run a new test several times before trusting it.
 - Commits that land on `main` use Conventional Commits; release-please derives the version
   and `CHANGELOG.md` from them, so never edit those by hand. `feat`/`fix` trigger a release.

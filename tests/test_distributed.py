@@ -1,11 +1,14 @@
 """Generating on the executors must give exactly what generating on the driver gives."""
 
+import decimal
+import sys
 from typing import Any
 
 import pytest
 from faker import Faker
 from faker.providers import BaseProvider
 from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import functions as F
 from pyspark.sql import types as T
 
 from faker_pyspark import FakerPySparkError, GeneratorSpecError, _distributed, provider
@@ -25,6 +28,11 @@ def collect(df: DataFrame) -> list[dict[str, Any]]:
     return [row.asDict(recursive=True) for row in df.collect()]
 
 
+def partition_count(df: DataFrame) -> int:
+    # Counts the partitions that hold rows. `df.rdd` does not exist over Spark Connect.
+    return df.select(F.spark_partition_id()).distinct().count()
+
+
 @pytest.mark.parametrize("partitions", [1, 3, 7])
 def test_distributed_matches_driver_for_every_type(spark: SparkSession, partitions: int) -> None:
     options: dict[str, Any] = {"rows": 60, "null_ratio": 0.2}
@@ -32,7 +40,7 @@ def test_distributed_matches_driver_for_every_type(spark: SparkSession, partitio
     on_executors = make_faker(seed=11).pyspark_dataframe(
         EVERY_TYPE, distributed=True, partitions=partitions, **options
     )
-    assert on_executors.rdd.getNumPartitions() == partitions
+    assert partition_count(on_executors) == partitions
     assert on_executors.schema == on_driver.schema
     assert collect(on_executors) == collect(on_driver)
 
@@ -82,6 +90,15 @@ def test_locale_reaches_the_executors(spark: SparkSession) -> None:
     assert any(any("぀" <= ch <= "鿿" for ch in row["name"]) for row in collect(df))
 
 
+def test_override_timestamps_match_the_driver(spark: SparkSession) -> None:
+    # Faker's date_time has no zone. Run with TZ set to a non-UTC zone to see this bite.
+    options: dict[str, Any] = {"rows": 30, "overrides": {"at": "date_time", "plain": "date_time"}}
+    schema = "at timestamp, plain timestamp_ntz"
+    on_driver = make_faker(seed=5).pyspark_dataframe(schema, distributed=False, **options)
+    on_executors = make_faker(seed=5).pyspark_dataframe(schema, distributed=True, **options)
+    assert collect(on_executors) == collect(on_driver)
+
+
 def test_zero_rows(spark: SparkSession, fake: Faker) -> None:
     df = fake.pyspark_dataframe("a int", rows=0, distributed=True)
     assert df.count() == 0 and df.columns == ["a"]
@@ -99,7 +116,7 @@ def test_large_requests_distribute_automatically(
     small = fake.pyspark_dataframe("id long", rows=50, partitions=5)
     large = fake.pyspark_dataframe("id long", rows=51, partitions=5)
     # Only the executor path honours `partitions`.
-    assert large.rdd.getNumPartitions() == 5
+    assert partition_count(large) == 5
     assert small.count() == 50 and large.count() == 51
 
     monkeypatch.setattr(_distributed, "available", lambda: False)
@@ -112,6 +129,14 @@ def test_asking_for_distribution_without_arrow_explains_what_to_install(
     monkeypatch.setattr(_distributed, "available", lambda: False)
     with pytest.raises(FakerPySparkError, match=r"faker-pyspark\[distributed\]"):
         fake.pyspark_dataframe("a int", distributed=True)
+
+
+def test_available_is_false_when_arrow_cannot_be_imported(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    assert _distributed.available()
+    monkeypatch.setitem(sys.modules, "pyarrow", None)  # makes `import pyarrow` fail
+    assert not _distributed.available()
 
 
 def test_unsupported_arrow_type_is_reported() -> None:
@@ -134,6 +159,7 @@ def test_batch_function_in_process_matches_the_row_generator() -> None:
             T.StructField("lookup", T.MapType(T.StringType(), T.BinaryType())),
             T.StructField("inner", T.StructType([T.StructField("b", T.BinaryType())])),
             T.StructField("numbers", T.ArrayType(T.IntegerType())),
+            T.StructField("price", T.DecimalType(10, 2)),
         ]
     )
     options: dict[str, Any] = {
@@ -157,6 +183,8 @@ def test_batch_function_in_process_matches_the_row_generator() -> None:
     produced = [row for batch in batches for row in batch.to_pylist()]
     for want, got in zip(expected, produced, strict=True):
         assert got["email"] == want["email"]
+        assert got["price"] == want["price"]
+        assert want["price"] is None or isinstance(got["price"], decimal.Decimal)
         assert got["numbers"] == want["numbers"]
         assert got["blob"] == (None if want["blob"] is None else bytes(want["blob"]))
         if want["lookup"] is not None:
@@ -164,6 +192,27 @@ def test_batch_function_in_process_matches_the_row_generator() -> None:
                 key: None if value is None else bytes(value)
                 for key, value in want["lookup"].items()
             }
+
+
+def test_batch_function_passes_rows_through_when_nothing_needs_converting() -> None:
+    import pyarrow as pa
+
+    from faker_pyspark._generate import RowGenerator
+
+    schema = T.StructType(
+        [T.StructField("id", T.LongType()), T.StructField("email", T.StringType())]
+    )
+    options: dict[str, Any] = {
+        "seed": 3,
+        "locale": None,
+        "providers": [],
+        "overrides": {},
+        "null_ratio": 0.0,
+        "array_size": (1, 2),
+    }
+    generate = _distributed._batch_function(schema, schema, options)
+    (batch,) = generate(iter([pa.record_batch({"id": [4, 5, 6]})]))
+    assert batch.to_pylist() == RowGenerator(schema, **options).rows([4, 5, 6])
 
 
 def test_a_larger_run_is_complete_and_distinct(spark: SparkSession, fake: Faker) -> None:

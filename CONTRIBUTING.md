@@ -24,9 +24,13 @@ CI runs all of these, and a pull request needs them to pass:
 
 ```bash
 uv run pytest                          # tests + coverage (local Spark session)
+SPARK_REMOTE="local[2]" uv run pytest  # the same tests over Spark Connect
 uv run prek run --all-files            # ruff lint + format, typos, zizmor, actionlint
 uv run mypy faker_pyspark tests        # strict type checking
 ```
+
+Spark Connect has no RDDs and no JVM on the client, so library code and tests use the
+DataFrame API only.
 
 Dependencies resolve with a seven-day cooldown (`exclude-newer` in `pyproject.toml`), so a
 release published in the last week is not picked up. GitHub Actions are pinned to commit

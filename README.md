@@ -41,6 +41,13 @@ Otherwise pull PySpark in as well:
 pip install 'faker-pyspark[pyspark]'
 ```
 
+To generate [large DataFrames](#large-dataframes) on the executors, Spark also needs pandas
+and pyarrow. Databricks and most managed runtimes ship them; elsewhere:
+
+```bash
+pip install 'faker-pyspark[distributed]'
+```
+
 ## How columns are filled
 
 For each column, the first of these that applies wins:
@@ -103,7 +110,54 @@ second = fake.pyspark_dataframe("email string, age int", rows=100)
 ```
 
 Dates and timestamps are drawn from a fixed range (1970 to 2029) rather than from "now", so
-a seeded run gives the same values tomorrow as it does today.
+a seeded run gives the same values tomorrow as it does today. Timestamps are in UTC, and a
+time without a zone that an override puts in a `timestamp` column is taken as UTC too, so
+the data does not depend on the time zone of the machine that made it.
+
+## Large DataFrames
+
+Small DataFrames are built on the driver. Above 100,000 rows the rows are generated on the
+executors instead, in parallel, so the size is limited by the cluster rather than by the
+driver's memory:
+
+```python
+df = fake.pyspark_dataframe("id long, email string, signup date", rows=50_000_000)
+df.write.parquet("/tmp/customers")
+```
+
+The data is the same either way: a row depends only on the seed and its position, not on
+where it was generated or how the rows were split up. To choose yourself:
+
+```python
+fake.pyspark_dataframe(schema, rows=5_000, distributed=True, partitions=8)  # on the executors
+fake.pyspark_dataframe(schema, rows=500_000, distributed=False)             # on the driver
+```
+
+What the executors need:
+
+- `faker` and `faker-pyspark` installed, along with pandas and pyarrow.
+- Any module of your own that holds a provider or override function the data uses.
+  Providers and functions defined in a notebook or script travel with the job.
+- The same Python minor version as the driver, as for any Python code Spark runs.
+
+Like any Spark DataFrame, the result is computed each time it is used. Seeded data comes
+out the same every time; cache or write it if generating it twice is too slow.
+
+## Spark Connect
+
+Everything works over [Spark Connect](https://spark.apache.org/docs/latest/spark-connect-overview.html),
+including serverless runtimes built on it. Pass the session, or let the provider find the
+active one:
+
+```python
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.remote("sc://localhost").getOrCreate()
+df = fake.pyspark_dataframe("id long, email string", rows=1_000_000, spark=spark)
+```
+
+Here the "executors" belong to the server, so `faker-pyspark` has to be installed there as
+well as on your client. The test suite runs over Connect with PySpark 4.
 
 ## Other options
 
@@ -115,6 +169,8 @@ fake.pyspark_dataframe(
     null_ratio=0.1,      # share of nulls in nullable columns
     array_size=(1, 3),   # inclusive length range for arrays and maps
     locale="ja_JP",      # defaults to your Faker's locale
+    distributed=None,    # True or False to choose where rows are generated; see above
+    partitions=None,     # partitions to generate in, when on the executors
 )
 
 fake.pyspark_rows(schema, rows=10)          # the same data as a list of dictionaries

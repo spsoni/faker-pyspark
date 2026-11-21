@@ -13,12 +13,19 @@ from faker_pyspark import PySparkProvider
 os.environ.setdefault("PYSPARK_PYTHON", sys.executable)
 
 
+#: Set SPARK_REMOTE (for example to "local[2]") to run the suite over Spark Connect.
+REMOTE = os.environ.get("SPARK_REMOTE")
+
+
 @pytest.fixture(scope="session")
 def spark() -> Iterator[SparkSession]:
+    builder = SparkSession.builder
+    if REMOTE:
+        builder = builder.remote(REMOTE)
+    else:
+        builder = builder.master("local[2]").config("spark.ui.enabled", "false")
     session = (
-        SparkSession.builder.master("local[2]")
-        .appName("faker_pyspark-tests")
-        .config("spark.ui.enabled", "false")
+        builder.appName("faker_pyspark-tests")
         .config("spark.sql.shuffle.partitions", "2")
         .config("spark.sql.session.timeZone", "UTC")
         .getOrCreate()
